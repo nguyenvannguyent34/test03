@@ -554,8 +554,8 @@
 
 <script>
 const QUESTIONS_FILE = "questions.xlsx";
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJ29Mp2uDDurchQAyGLQN7nAg3BApihF9gXHmq2QC-ra92nAToJ328OTYrt4tTSgH7Rg/exec"; // dán Apps Script URL nếu dùng
-const ADMIN_PASSWORD = "101212019";
+const SCRIPT_URL = ""; // dán Apps Script URL nếu dùng
+const ADMIN_PASSWORD = "admin123";
 const EXAM_QUESTION_COUNT = 20;
 const EXAM_DURATION_MIN = 20;
 
@@ -642,25 +642,56 @@ function escapeHtml(s){
 }
 
 function buildQuestionUrls(){
+  const cacheBust = `v=${Date.now()}`;
   const cleanHref = window.location.href.split("#")[0].split("?")[0];
   const baseDir = cleanHref.endsWith("/")
     ? cleanHref
     : cleanHref.substring(0, cleanHref.lastIndexOf("/") + 1);
 
-  const urls = [
+  // A) Cùng origin (hosting / GitHub Pages)
+  const localUrls = [
     new URL(QUESTIONS_FILE, document.baseURI).href,
     new URL("./" + QUESTIONS_FILE, document.baseURI).href,
     new URL(QUESTIONS_FILE, baseDir).href,
     baseDir + QUESTIONS_FILE,
-    QUESTIONS_FILE,
-    "./" + QUESTIONS_FILE
-  ];
+    "./" + QUESTIONS_FILE,
+    QUESTIONS_FILE
+  ].map(u => (u.includes("?") ? (u + "&" + cacheBust) : (u + "?" + cacheBust)));
 
-  return [...new Set(urls)];
+  // B) Fallback GitHub Pages: thử lấy từ raw.githubusercontent.com (nhiều nhánh phổ biến)
+  const rawUrls = [];
+  try{
+    const host = window.location.hostname || "";
+    const isGhPages = host.endsWith(".github.io");
+    if(isGhPages){
+      const user = host.split(".")[0];
+      const parts = (window.location.pathname || "/").split("/").filter(Boolean);
+      const repo = parts.length ? parts[0] : "";
+
+      // folder hiện tại trong repo
+      let folder = "";
+      if(parts.length >= 2){
+        const rest = parts.slice(1);
+        if(rest.length && rest[rest.length-1].includes(".")) rest.pop(); // bỏ index.html nếu có
+        folder = rest.length ? (rest.join("/") + "/") : "";
+      }
+
+      if(user && repo){
+        const branches = ["gh-pages","main","master"];
+        for(const br of branches){
+          rawUrls.push(`https://raw.githubusercontent.com/${user}/${repo}/${br}/${folder}${QUESTIONS_FILE}?${cacheBust}`);
+        }
+      }
+    }
+  }catch(e){}
+
+  return [...new Set([...localUrls, ...rawUrls])];
 }
 
 async function fetchQuestionFile(){
   const urls = buildQuestionUrls();
+  window.__QUESTIONS_URLS__ = urls;
+
   let lastError = null;
 
   for(const url of urls){
@@ -670,6 +701,13 @@ async function fetchQuestionFile(){
         lastError = new Error(`HTTP ${res.status} khi tải ${url}`);
         continue;
       }
+
+      const ct = (res.headers.get("content-type") || "").toLowerCase();
+      if(ct.includes("text/html")){
+        lastError = new Error(`Không đúng định dạng (text/html) tại ${url}`);
+        continue;
+      }
+
       const ab = await res.arrayBuffer();
       return { ab, url };
     }catch(err){
@@ -722,18 +760,18 @@ async function loadQuestions(){
     bankInfo.textContent = `Ngân hàng câu hỏi gồm ${BANK.length} câu`;
     setStatus("ok", `Ngân hàng câu hỏi gồm ${BANK.length} câu`);
     setNet("Sẵn sàng");
-
     window.__QUESTIONS_URL__ = url;
   }catch(err){
     console.error(err);
     bankInfo.textContent = "Ngân hàng câu hỏi gồm 0 câu";
     setNet("Lỗi tải câu hỏi");
-
-    const tried = (typeof buildQuestionUrls === "function") ? buildQuestionUrls().slice(0,4).join("\n") : "";
+    const first = (window.__QUESTIONS_URLS__ && window.__QUESTIONS_URLS__[0]) ? window.__QUESTIONS_URLS__[0].split("?")[0] : "";
     setStatus("bad", `Không thể tải ngân hàng câu hỏi.
-• Hãy kiểm tra file questions.xlsx có nằm cùng thư mục với trang
-• Nếu dùng GitHub Pages: đảm bảo file questions.xlsx được commit và mở bằng link Pages
-${tried ? "\nĐã thử các đường dẫn:\n" + tried : ""}`);
+• Hãy kiểm tra file questions.xlsx có nằm cùng thư mục với trang đang publish
+• Nếu dùng GitHub Pages: mở bằng link *.github.io, không mở github.com
+${first ? ("• Thử mở trực tiếp file câu hỏi: " + first) : ""}
+
+Gợi ý: Nếu mở link file bị 404 thì bạn đang đặt questions.xlsx sai vị trí xuất bản của Pages.`);
   }
 }
 
