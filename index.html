@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Kiểm tra trực tuyến nghiệp vụ Cán bộ kiểm tra PCCC</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root{
+      --primary:#8b0000;
+      --primary2:#b22222;
+      --primary3:#6f0000;
+      --gold:#ffd700;
+      --card:rgba(255,255,255,0.94);
+      --muted:#5f6875;
+      --ok:#0f7b0f;
+      --bad:#b00020;
+      --shadow:0 12px 30px rgba(0,0,0,0.35);
+      --border:1px solid rgba(0,0,0,0.10);
+    }
+
+    *{box-sizing:border-box}
+    html, body{margin:0; padding:0; min-height:100%}
+
+    body{
+      font-family:"Times New Roman", Times, serif;
+      color:#111;
+      min-height:100vh;
+      position:relative;
+      background:#111;
+      display:flex;
+      flex-direction:column;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:
+        linear-gradient(to bottom, rgba(139,0,0,0.22), rgba(0,0,0,0.60)),
+        url("pccc-bg.png") center/cover no-repeat;
+      filter:blur(7px) brightness(0.62);
+      transform:scale(1.04);
+      z-index:-2;
+    }
+
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      background:radial-gradient(circle at 50% 10%, rgba(255,255,255,0.10), transparent 38%);
+      z-index:-1;
+      pointer-events:none;
+    }
+
+    .top-unit{
+      text-align:center;
+      color:var(--gold);
+      padding:18px 12px 8px;
+      text-shadow:0 2px 6px rgba(0,0,0,0.45);
+      line-height:1.35;
+    }
+
+    .unit-line{
+      display:inline-block;
+      padding:0 20px 3px;
+      margin:0 auto 6px;
+    }
+
+    .top-unit .line1{
+      font-size:21px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:0.3px;
+    }
+
+    .top-unit .line2{
+      font-size:20px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:0.3px;
+    }
+
+    .topbar{
+      width:min(1100px, calc(100% - 24px));
+      margin:34px auto 14px;
+      background:rgba(139,0,0,0.92);
+      color:#fff;
+      padding:16px 20px;
+      display:flex;
+      align-items:center;
+      gap:14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.14);
+      box-shadow:var(--shadow);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex:1;
+      min-width:0;
+    }
+
+    .logo{
+      width:62px;
+      height:62px;
+      border-radius:12px;
+      background:rgba(255,255,255,0.14);
+      border:1px solid rgba(255,255,255,0.18);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      flex-shrink:0;
+    }
+
+    .logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      background:transparent;
+    }
+
+    .logo-fallback{
+      display:none;
+      font-size:12px;
+      text-align:center;
+      line-height:1.2;
+      padding:6px;
+    }
+
+    .brand h1{
+      margin:0;
+      font-size:25px;
+      line-height:1.22;
+      font-weight:700;
+    }
+
+    .brand .sub{
+      margin-top:5px;
+      font-size:16px;
+      opacity:0.96;
+      line-height:1.3;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      padding:8px 12px;
+      background:rgba(255,255,255,0.12);
+      border:1px solid rgba(255,255,255,0.20);
+      border-radius:999px;
+      font-size:14px;
+      white-space:nowrap;
+    }
+
+    .page{
+      width:min(980px, calc(100% - 24px));
+      margin:0 auto 24px;
+      flex:1;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:20px;
+      border:var(--border);
+      margin-bottom:14px;
+    }
+
+    .row{display:flex; gap:16px; flex-wrap:wrap}
+    .col{flex:1; min-width:280px}
+    .muted{color:var(--muted)}
+
+    .btn{
+      padding:11px 16px;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      background:var(--primary2);
+      color:#fff;
+      font-size:16px;
+      font-family:"Times New Roman", Times, serif;
+      transition:filter .15s ease, transform .05s ease;
+    }
+
+    .btn:hover{filter:brightness(0.96)}
+    .btn:active{transform:scale(0.99)}
+
+    .btn.secondary{
+      background:#fff;
+      color:#111;
+      border:1px solid rgba(0,0,0,0.15);
+    }
+
+    .btn.ghost{
+      background:transparent;
+      color:#111;
+      border:1px dashed rgba(0,0,0,0.25);
+    }
+
+    .btn:disabled{opacity:0.55; cursor:not-allowed; transform:none}
+
+    input, select{
+      width:100%;
+      padding:11px 12px;
+      border-radius:12px;
+      border:1px solid rgba(0,0,0,0.18);
+      font-family:"Times New Roman", Times, serif;
+      font-size:16px;
+      background:#fff;
+    }
+
+    label{
+      display:block;
+      margin:10px 0 6px;
+      font-weight:700;
+    }
+
+    .hr{
+      height:1px;
+      background:rgba(0,0,0,0.10);
+      margin:14px 0;
+    }
+
+    .status{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(0,0,0,0.12);
+      background:rgba(255,255,255,0.68);
+      font-size:15px;
+      line-height:1.45;
+      white-space:pre-line;
+    }
+
+    .status.ok{
+      border-color:rgba(15,123,15,0.25);
+      background:rgba(15,123,15,0.08);
+    }
+
+    .status.bad{
+      border-color:rgba(176,0,32,0.25);
+      background:rgba(176,0,32,0.08);
+    }
+
+    .hide{display:none !important}
+
+    .quiz-head{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+      flex-wrap:wrap;
+    }
+
+    .timer{
+      font-size:20px;
+      font-weight:700;
+      padding:9px 14px;
+      border-radius:12px;
+      background:#fff;
+      border:1px solid rgba(0,0,0,0.15);
+      min-width:180px;
+      text-align:center;
+    }
+
+    .qno{
+      font-weight:800;
+      font-size:19px;
+      margin:0 0 8px;
+      color:var(--primary3);
+    }
+
+    .qtext{
+      font-size:20px;
+      margin:0 0 10px;
+      line-height:1.4;
+    }
+
+    .options{display:grid; gap:10px}
+
+    .opt{
+      padding:13px 14px;
+      border-radius:14px;
+      border:1px solid rgba(0,0,0,0.15);
+      background:#fff;
+      cursor:pointer;
+      transition:transform .05s ease, filter .12s ease, border-color .12s ease;
+      line-height:1.45;
+      font-size:17px;
+    }
+
+    .opt:hover{filter:brightness(0.985)}
+    .opt:active{transform:scale(0.995)}
+
+    .opt.selected{
+      outline:3px solid rgba(178,34,34,0.20);
+      border-color:rgba(178,34,34,0.45);
+      background:rgba(178,34,34,0.05);
+    }
+
+    .nav{
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .nav .left, .nav .right{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .progress{
+      margin-top:10px;
+      font-size:15px;
+      color:var(--muted);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:15px;
+      background:#fff;
+      border-radius:14px;
+      overflow:hidden;
+      border:1px solid rgba(0,0,0,0.12);
+    }
+
+    th, td{
+      padding:10px;
+      border-bottom:1px solid rgba(0,0,0,0.10);
+      text-align:left;
+      vertical-align:top;
+    }
+
+    th{background:rgba(139,0,0,0.08)}
+    tr:last-child td{border-bottom:none}
+
+    .small{font-size:13px}
+
+    .footer{
+      text-align:center;
+      color:#fff;
+      font-size:16px;
+      padding:8px 12px 20px;
+      text-shadow:0 2px 6px rgba(0,0,0,0.35);
+      font-style:italic;
+    }
+
+    @media (max-width: 768px){
+      .top-unit .line1, .top-unit .line2{font-size:17px}
+      .topbar{
+        flex-direction:column;
+        align-items:stretch;
+        margin-top:28px;
+      }
+      .actions{justify-content:flex-start}
+      .brand h1{font-size:21px}
+      .qtext{font-size:18px}
+      .logo{width:54px; height:54px}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="top-unit">
+    <div class="line1"><span class="unit-line">Công an tỉnh Quảng Ninh</span></div>
+    <div class="line2"><span class="unit-line">Phòng Cảnh sát PCCC và CNCH</span></div>
+  </div>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo" title="Logo Cảnh sát PCCC">
+        <img src="logo-pccc.png" alt="Logo Cảnh sát PCCC"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <div class="logo-fallback">LOGO<br>PCCC</div>
+      </div>
+      <div style="min-width:0">
+        <h1>Kiểm tra trực tuyến nghiệp vụ Cán bộ kiểm tra PCCC</h1>
+        <div class="sub">Mỗi thí sinh có 20 phút để trả lời 20 câu hỏi trắc nghiệm</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <div class="pill" id="bankInfo">Ngân hàng câu hỏi gồm … câu</div>
+      <div class="pill">Trạng thái: <span id="netState">Sẵn sàng</span></div>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <div class="card" id="modeCard">
+      <h2 style="margin:0 0 6px">Chọn vai trò</h2>
+      <div class="muted">Thí sinh làm bài thi; Admin xem tổng hợp kết quả.</div>
+
+      <div class="hr"></div>
+
+      <button class="btn" id="btnCandidate">Thí sinh</button>
+      <button class="btn secondary" id="btnAdmin" style="margin-left:10px">Admin</button>
+
+      <div class="hr"></div>
+      <div class="status" id="statusBox">Đang tải ngân hàng câu hỏi…</div>
+    </div>
+
+    <div class="card hide" id="loginCard">
+      <h2 style="margin:0 0 8px">Thông tin thí sinh</h2>
+
+      <div class="row">
+        <div class="col">
+          <label>Họ và tên</label>
+          <input id="fullName" placeholder="Nhập họ và tên" autocomplete="name"/>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Chức vụ</label>
+          <select id="positionName">
+            <option value="">-- Chọn chức vụ --</option>
+            <option>Cán bộ</option>
+            <option>Phó Đội trưởng</option>
+            <option>Đội trưởng</option>
+          </select>
+        </div>
+        <div class="col">
+          <label>Đơn vị</label>
+          <select id="unitName">
+            <option value="">-- Chọn đơn vị --</option>
+            <option>Đội Công tác phòng cháy</option>
+            <option>Đội Chữa cháy và cứu nạn, cứu hộ khu vực 1</option>
+            <option>Đội Chữa cháy và cứu nạn, cứu hộ khu vực 2</option>
+            <option>Đội Chữa cháy và cứu nạn, cứu hộ khu vực 3</option>
+            <option>Đội Chữa cháy và cứu nạn, cứu hộ khu vực 4</option>
+            <option>Đội Chữa cháy và cứu nạn, cứu hộ khu vực 5</option>
+            <option>Đội Chữa cháy và cứu nạn, cứu hộ khu vực 6</option>
+            <option>Đội Chữa cháy và cứu nạn, cứu hộ khu vực 7</option>
+            <option>Đội Chữa cháy và cứu nạn, cứu hộ khu vực 8</option>
+            <option>Đội Chữa cháy và cứu nạn, cứu hộ khu vực 9</option>
+            <option>Đội Chữa cháy và cứu nạn, cứu hộ khu vực 10</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <button class="btn" id="btnStart">Bắt đầu làm bài</button>
+        <button class="btn secondary" id="btnBackToMode1">Quay lại</button>
+      </div>
+
+      <div class="status small" style="margin-top:12px">
+        Hệ thống sẽ chọn ngẫu nhiên 20 câu từ ngân hàng câu hỏi.
+      </div>
+    </div>
+
+    <div class="card hide" id="quizCard">
+      <div class="quiz-head">
+        <div>
+          <div class="qno" id="qNo">Câu 1/20</div>
+          <div class="qtext" id="qText">...</div>
+          <div class="progress" id="whoInfo"></div>
+        </div>
+        <div class="timer" id="timerBox">20:00</div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="options" id="optList"></div>
+
+      <div class="nav">
+        <div class="left">
+          <button class="btn secondary" id="btnPrev">← Câu trước</button>
+          <button class="btn secondary" id="btnNext">Câu tiếp →</button>
+        </div>
+        <div class="right">
+          <button class="btn" id="btnSubmit">Nộp bài</button>
+          <button class="btn ghost" id="btnExit">Thoát</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card hide" id="resultCard">
+      <h2 style="margin:0 0 8px">Kết quả</h2>
+      <div class="status ok" id="resultSummary"></div>
+      <div class="hr"></div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <button class="btn secondary" id="btnReview">Xem lại</button>
+        <button class="btn" id="btnFinish">Hoàn tất</button>
+      </div>
+
+      <div class="hr"></div>
+      <div class="muted small" id="sendNote"></div>
+    </div>
+
+    <div class="card hide" id="reviewCard">
+      <h2 style="margin:0 0 10px">Xem lại bài làm</h2>
+      <div id="reviewList"></div>
+      <div class="hr"></div>
+      <button class="btn secondary" id="btnBackFromReview">Quay lại kết quả</button>
+    </div>
+
+    <div class="card hide" id="adminCard">
+      <div class="row">
+        <div class="col">
+          <h2 style="margin:0 0 8px">Admin</h2>
+          <label>Mật khẩu</label>
+          <input id="adminPass" type="password" placeholder="Nhập mật khẩu admin"/>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px">
+            <button class="btn" id="btnAdminLogin">Đăng nhập</button>
+            <button class="btn secondary" id="btnBackToMode2">Quay lại</button>
+          </div>
+          <div class="status small" id="adminStatus" style="margin-top:12px">Vui lòng nhập mật khẩu để truy cập.</div>
+        </div>
+
+        <div class="col hide" id="adminRightCol">
+          <h3 style="margin:0 0 8px">Tổng hợp kết quả</h3>
+          <div class="muted small">
+            Bảng này hiển thị kết quả tổng hợp sau khi đăng nhập.
+          </div>
+        </div>
+      </div>
+
+      <div class="hide" id="adminPanel">
+        <div class="hr"></div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px">
+          <button class="btn" id="btnRefreshResults" disabled>Làm mới</button>
+          <button class="btn secondary" id="btnExportCSV" disabled>Xuất CSV</button>
+          <button class="btn ghost" id="btnClearLocal">Xóa dữ liệu cục bộ</button>
+        </div>
+
+        <div id="resultsWrap" class="muted">Chưa có dữ liệu.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">Design by Đội 2</div>
+
+<script>
+const QUESTIONS_FILE = "questions.xlsx";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJ29Mp2uDDurchQAyGLQN7nAg3BApihF9gXHmq2QC-ra92nAToJ328OTYrt4tTSgH7Rg/exec"; // dán Apps Script URL nếu dùng
+const ADMIN_PASSWORD = "101212019";
+const EXAM_QUESTION_COUNT = 20;
+const EXAM_DURATION_MIN = 20;
+
+let BANK = [];
+let EXAM = [];
+let answers = {};
+let startTs = null;
+let timerId = null;
+let remainingSec = EXAM_DURATION_MIN * 60;
+let curIdx = 0;
+let candidate = { fullName:"", unitName:"", positionName:"" };
+let lastResult = null;
+
+const $ = (id)=>document.getElementById(id);
+
+const modeCard = $("modeCard");
+const loginCard = $("loginCard");
+const quizCard = $("quizCard");
+const resultCard = $("resultCard");
+const reviewCard = $("reviewCard");
+const adminCard = $("adminCard");
+const adminRightCol = $("adminRightCol");
+const adminPanel = $("adminPanel");
+
+const statusBox = $("statusBox");
+const bankInfo = $("bankInfo");
+const netState = $("netState");
+
+function show(el){ if(el) el.classList.remove("hide"); }
+function hide(el){ if(el) el.classList.add("hide"); }
+
+function setStatus(type, msg){
+  statusBox.className = "status " + (type || "");
+  statusBox.textContent = msg;
+}
+
+function setNet(msg){
+  netState.textContent = msg;
+}
+
+function resetAdminUI(){
+  hide(adminRightCol);
+  hide(adminPanel);
+  const st = $("adminStatus");
+  if(st){
+    st.className = "status small";
+    st.textContent = "Vui lòng nhập mật khẩu để truy cập.";
+  }
+  const pass = $("adminPass");
+  if(pass) pass.value = "";
+  $("btnRefreshResults").disabled = true;
+  $("btnExportCSV").disabled = true;
+  $("resultsWrap").innerHTML = "<div class='muted'>Chưa có dữ liệu.</div>";
+  window.__ADMIN_ROWS__ = [];
+}
+
+function shuffle(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+function fmtTime(sec){
+  const m = Math.floor(sec/60);
+  const s = sec % 60;
+  return `${pad2(m)}:${pad2(s)}`;
+}
+
+function safeText(x){
+  return (x === undefined || x === null) ? "" : String(x).trim();
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function buildQuestionUrls(){
+  const cleanHref = window.location.href.split("#")[0].split("?")[0];
+  const baseDir = cleanHref.endsWith("/")
+    ? cleanHref
+    : cleanHref.substring(0, cleanHref.lastIndexOf("/") + 1);
+
+  const urls = [
+    new URL(QUESTIONS_FILE, document.baseURI).href,
+    new URL("./" + QUESTIONS_FILE, document.baseURI).href,
+    new URL(QUESTIONS_FILE, baseDir).href,
+    baseDir + QUESTIONS_FILE,
+    QUESTIONS_FILE,
+    "./" + QUESTIONS_FILE
+  ];
+
+  return [...new Set(urls)];
+}
+
+async function fetchQuestionFile(){
+  const urls = buildQuestionUrls();
+  let lastError = null;
+
+  for(const url of urls){
+    try{
+      const res = await fetch(url, { cache:"no-store" });
+      if(!res.ok){
+        lastError = new Error(`HTTP ${res.status} khi tải ${url}`);
+        continue;
+      }
+      const ab = await res.arrayBuffer();
+      return { ab, url };
+    }catch(err){
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error("Không thể tải questions.xlsx");
+}
+
+async function loadQuestions(){
+  try{
+    if(window.location.protocol === "file:"){
+      bankInfo.textContent = "Ngân hàng câu hỏi gồm 0 câu";
+      setNet("Cần hosting");
+      setStatus("bad", `Không thể tải ngân hàng câu hỏi khi mở bằng file://
+• Hãy chạy bằng hosting/web server (GitHub Pages, hosting nội bộ, hoặc Live Server)
+• Sau đó tải lại trang`);
+      return;
+    }
+
+    setNet("Đang tải");
+    setStatus("", "Đang tải ngân hàng câu hỏi…");
+
+    const { ab, url } = await fetchQuestionFile();
+
+    const wb = XLSX.read(ab, { type:"array" });
+    const wsName = wb.SheetNames[0];
+    const ws = wb.Sheets[wsName];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval:"" });
+
+    const parsed = rows.map((r, idx)=>({
+      id: safeText(r.ID ?? r.Id ?? r.id ?? (idx + 1)),
+      question: safeText(r.Question ?? r.question ?? r.Q ?? r.CauHoi ?? r["Câu hỏi"]),
+      A: safeText(r.A ?? r["Đáp án A"] ?? r["A."]),
+      B: safeText(r.B ?? r["Đáp án B"] ?? r["B."]),
+      C: safeText(r.C ?? r["Đáp án C"] ?? r["C."]),
+      D: safeText(r.D ?? r["Đáp án D"] ?? r["D."]),
+      correct: safeText(r.Correct ?? r.correct ?? r.Answer ?? r["Đáp án đúng"]).toUpperCase(),
+      explanation: safeText(r.Explanation ?? r.explanation ?? r.Note ?? r.GiaiThich ?? r["Giải thích"])
+    })).filter(q =>
+      q.question && q.A && q.B && q.C && q.D && ["A","B","C","D"].includes(q.correct)
+    );
+
+    if(parsed.length < EXAM_QUESTION_COUNT){
+      throw new Error(`Ngân hàng câu hỏi quá ít, cần tối thiểu ${EXAM_QUESTION_COUNT} câu.`);
+    }
+
+    BANK = parsed;
+    bankInfo.textContent = `Ngân hàng câu hỏi gồm ${BANK.length} câu`;
+    setStatus("ok", `Ngân hàng câu hỏi gồm ${BANK.length} câu`);
+    setNet("Sẵn sàng");
+
+    window.__QUESTIONS_URL__ = url;
+  }catch(err){
+    console.error(err);
+    bankInfo.textContent = "Ngân hàng câu hỏi gồm 0 câu";
+    setNet("Lỗi tải câu hỏi");
+
+    const tried = (typeof buildQuestionUrls === "function") ? buildQuestionUrls().slice(0,4).join("\n") : "";
+    setStatus("bad", `Không thể tải ngân hàng câu hỏi.
+• Hãy kiểm tra file questions.xlsx có nằm cùng thư mục với trang
+• Nếu dùng GitHub Pages: đảm bảo file questions.xlsx được commit và mở bằng link Pages
+${tried ? "\nĐã thử các đường dẫn:\n" + tried : ""}`);
+  }
+}
+
+function buildExam(){
+  EXAM = shuffle([...BANK]).slice(0, EXAM_QUESTION_COUNT);
+  answers = {};
+  curIdx = 0;
+  startTs = Date.now();
+  remainingSec = EXAM_DURATION_MIN * 60;
+  lastResult = null;
+}
+
+function renderQuestion(){
+  const q = EXAM[curIdx];
+  $("qNo").textContent = `Câu ${curIdx + 1}/${EXAM_QUESTION_COUNT}`;
+  $("qText").textContent = q.question;
+  $("whoInfo").textContent = `${candidate.fullName} • ${candidate.unitName} • ${candidate.positionName}`;
+
+  const optList = $("optList");
+  optList.innerHTML = "";
+
+  const opts = [["A", q.A], ["B", q.B], ["C", q.C], ["D", q.D]];
+  for(const [key, text] of opts){
+    const div = document.createElement("div");
+    div.className = "opt" + (answers[curIdx] === key ? " selected" : "");
+    div.innerHTML = `<b>${key}.</b> ${escapeHtml(text)}`;
+    div.onclick = ()=>{
+      answers[curIdx] = key;
+      renderQuestion();
+    };
+    optList.appendChild(div);
+  }
+
+  $("btnPrev").disabled = (curIdx === 0);
+  $("btnNext").disabled = (curIdx === EXAM_QUESTION_COUNT - 1);
+}
+
+function startTimer(){
+  $("timerBox").textContent = fmtTime(remainingSec);
+
+  if(timerId) clearInterval(timerId);
+  timerId = setInterval(()=>{
+    remainingSec--;
+    $("timerBox").textContent = fmtTime(Math.max(0, remainingSec));
+    if(remainingSec <= 0){
+      clearInterval(timerId);
+      timerId = null;
+      submitExam(true);
+    }
+  }, 1000);
+}
+
+function calcScore(){
+  let correct = 0;
+
+  const detail = EXAM.map((q, idx)=>{
+    const pick = answers[idx] || "";
+    const ok = pick === q.correct;
+    if(ok) correct++;
+    return {
+      idx: idx + 1,
+      id: q.id,
+      question: q.question,
+      pick,
+      correct: q.correct,
+      ok,
+      explanation: q.explanation,
+      A: q.A,
+      B: q.B,
+      C: q.C,
+      D: q.D
+    };
+  });
+
+  return { correct, total: EXAM_QUESTION_COUNT, detail };
+}
+
+function localKey(){ return "PCCC_EXAM_RESULTS_V4"; }
+
+function loadLocalResults(){
+  try{
+    return JSON.parse(localStorage.getItem(localKey()) || "[]");
+  }catch{
+    return [];
+  }
+}
+
+function saveLocalResult(row){
+  const arr = loadLocalResults();
+  arr.unshift(row);
+  localStorage.setItem(localKey(), JSON.stringify(arr.slice(0, 2000)));
+}
+
+async function postToScript(payload){
+  if(!SCRIPT_URL) return { ok:false, skipped:true };
+
+  try{
+    const res = await fetch(SCRIPT_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+    const txt = await res.text();
+    return { ok:res.ok, status:res.status, text:txt };
+  }catch(err){
+    return { ok:false, error:String(err) };
+  }
+}
+
+async function fetchFromScript(){
+  if(!SCRIPT_URL) throw new Error("SCRIPT_URL trống");
+  const url = SCRIPT_URL + (SCRIPT_URL.includes("?") ? "&" : "?") + "action=list";
+  const res = await fetch(url, { cache:"no-store" });
+  return await res.json();
+}
+
+async function submitExam(auto = false){
+  if(timerId){
+    clearInterval(timerId);
+    timerId = null;
+  }
+
+  $("btnSubmit").disabled = true;
+
+  const now = new Date();
+  const durationSec = Math.round((Date.now() - startTs) / 1000);
+  const score = calcScore();
+  lastResult = score;
+
+  const row = {
+    time: now.toISOString(),
+    fullName: candidate.fullName,
+    unitName: candidate.unitName,
+    positionName: candidate.positionName,
+    total: score.total,
+    correct: score.correct,
+    wrong: score.total - score.correct,
+    percent: Math.round(score.correct / score.total * 100),
+    durationSec,
+    autoSubmit: !!auto,
+    detail: score.detail
+  };
+
+  saveLocalResult(row);
+
+  $("sendNote").textContent = "";
+  const r = await postToScript(row);
+  if(r.skipped){
+    $("sendNote").textContent = "Kết quả đã được lưu trên thiết bị.";
+  }else if(r.ok){
+    $("sendNote").textContent = "Kết quả đã được ghi nhận vào hệ thống tổng hợp.";
+  }else{
+    $("sendNote").textContent = "Kết quả đã lưu trên thiết bị; chưa gửi được lên hệ thống tổng hợp.";
+  }
+
+  hide(quizCard);
+  show(resultCard);
+
+  $("resultSummary").className = "status ok";
+  $("resultSummary").innerHTML =
+    `<b>${escapeHtml(candidate.fullName)}</b> • ${escapeHtml(candidate.unitName)} • ${escapeHtml(candidate.positionName)}<br>
+     Số câu đúng: <b>${score.correct}/${score.total}</b> (${Math.round(score.correct / score.total * 100)}%)<br>
+     Thời gian làm bài: <b>${fmtTime(Math.min(durationSec, EXAM_DURATION_MIN * 60))}</b>`;
+}
+
+function renderReview(){
+  const wrap = $("reviewList");
+  wrap.innerHTML = "";
+  if(!lastResult) return;
+
+  lastResult.detail.forEach(d=>{
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.marginBottom = "12px";
+    card.innerHTML = `
+      <div style="display:flex; gap:10px; justify-content:space-between; flex-wrap:wrap">
+        <div><b>Câu ${d.idx}.</b> ${escapeHtml(d.question)}</div>
+        <div class="small" style="white-space:nowrap">
+          ${d.ok ? `<span style="color:var(--ok); font-weight:800">ĐÚNG</span>` : `<span style="color:var(--bad); font-weight:800">SAI</span>`}
+        </div>
+      </div>
+      <div class="hr"></div>
+      <div class="small" style="line-height:1.6">
+        <div><b>A.</b> ${escapeHtml(d.A)}</div>
+        <div><b>B.</b> ${escapeHtml(d.B)}</div>
+        <div><b>C.</b> ${escapeHtml(d.C)}</div>
+        <div><b>D.</b> ${escapeHtml(d.D)}</div>
+      </div>
+      <div class="hr"></div>
+      <div class="small" style="line-height:1.6">
+        Bạn chọn: <b>${escapeHtml(d.pick || "—")}</b> • Đáp án đúng: <b>${escapeHtml(d.correct)}</b>
+        ${d.explanation ? `<div style="margin-top:8px"><b>Giải thích:</b> ${escapeHtml(d.explanation)}</div>` : ``}
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function renderAdminTable(rows){
+  if(!rows || !rows.length){
+    $("resultsWrap").innerHTML = "<div class='muted'>Chưa có dữ liệu.</div>";
+    return;
+  }
+
+  const head = `
+    <table>
+      <thead>
+        <tr>
+          <th>Thời gian</th>
+          <th>Họ và tên</th>
+          <th>Đơn vị</th>
+          <th>Chức vụ</th>
+          <th>Đúng</th>
+          <th>Sai</th>
+          <th>%</th>
+          <th>Thời gian làm</th>
+          <th>Nguồn</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  const body = rows.map(r=>{
+    const t = r.time ? new Date(r.time).toLocaleString("vi-VN") : "";
+    const src = r.fromScript ? "Hệ thống" : "Cục bộ";
+    return `
+      <tr>
+        <td>${escapeHtml(t)}</td>
+        <td>${escapeHtml(r.fullName || "")}</td>
+        <td>${escapeHtml(r.unitName || "")}</td>
+        <td>${escapeHtml(r.positionName || "")}</td>
+        <td><b>${escapeHtml(r.correct ?? "")}</b>/${escapeHtml(r.total ?? "")}</td>
+        <td>${escapeHtml(r.wrong ?? "")}</td>
+        <td>${escapeHtml(r.percent ?? "")}%</td>
+        <td>${escapeHtml(r.durationSec ? fmtTime(Math.min(r.durationSec, 24 * 3600)) : "")}</td>
+        <td>${escapeHtml(src)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  $("resultsWrap").innerHTML = head + body + "</tbody></table>";
+}
+
+function exportCSV(rows){
+  const header = ["time","fullName","unitName","positionName","total","correct","wrong","percent","durationSec","autoSubmit","source"];
+  const lines = [header.join(",")];
+
+  rows.forEach(r=>{
+    const src = r.fromScript ? "system" : "local";
+    const vals = [
+      r.time || "",
+      (r.fullName || "").replaceAll('"','""'),
+      (r.unitName || "").replaceAll('"','""'),
+      (r.positionName || "").replaceAll('"','""'),
+      r.total ?? "",
+      r.correct ?? "",
+      r.wrong ?? "",
+      r.percent ?? "",
+      r.durationSec ?? "",
+      r.autoSubmit ? "1" : "0",
+      src
+    ];
+    lines.push(vals.map(v => `"${String(v)}"`).join(","));
+  });
+
+  const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ket_qua_thi.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+async function refreshResults(){
+  $("adminStatus").className = "status small";
+  $("adminStatus").textContent = "Đang tải dữ liệu…";
+
+  const local = loadLocalResults().map(r => ({...r, fromScript:false}));
+
+  let scriptRows = [];
+  if(SCRIPT_URL){
+    try{
+      const data = await fetchFromScript();
+      if(Array.isArray(data?.rows)){
+        scriptRows = data.rows.map(r => ({...r, fromScript:true}));
+      }
+    }catch(e){}
+  }
+
+  const merged = [...scriptRows, ...local].sort((a,b)=>{
+    const ta = new Date(a.time || 0).getTime();
+    const tb = new Date(b.time || 0).getTime();
+    return tb - ta;
+  });
+
+  window.__ADMIN_ROWS__ = merged;
+  renderAdminTable(merged);
+
+  $("adminStatus").className = "status ok small";
+  $("adminStatus").textContent = `Đã tải ${merged.length} bản ghi.`;
+}
+
+// Sự kiện giao diện
+$("btnCandidate").onclick = ()=>{
+  hide(modeCard);
+  show(loginCard);
+};
+
+$("btnBackToMode1").onclick = ()=>{
+  hide(loginCard);
+  show(modeCard);
+};
+
+$("btnAdmin").onclick = ()=>{
+  hide(modeCard);
+  show(adminCard);
+  resetAdminUI();
+  setTimeout(()=>{
+    const p = $("adminPass");
+    if(p) p.focus();
+  }, 50);
+};
+
+$("btnBackToMode2").onclick = ()=>{
+  hide(adminCard);
+  show(modeCard);
+  resetAdminUI();
+};
+
+$("btnStart").onclick = ()=>{
+  const fn = $("fullName").value.trim();
+  const un = $("unitName").value.trim();
+  const pn = $("positionName").value.trim();
+
+  if(!fn || !un || !pn){
+    alert("Vui lòng nhập đầy đủ Họ và tên, Chức vụ và Đơn vị.");
+    return;
+  }
+
+  if(BANK.length < EXAM_QUESTION_COUNT){
+    alert("Ngân hàng câu hỏi chưa sẵn sàng.");
+    return;
+  }
+
+  candidate.fullName = fn;
+  candidate.unitName = un;
+  candidate.positionName = pn;
+
+  buildExam();
+  hide(loginCard);
+  show(quizCard);
+  renderQuestion();
+  startTimer();
+};
+
+$("btnPrev").onclick = ()=>{
+  if(curIdx > 0){
+    curIdx--;
+    renderQuestion();
+  }
+};
+
+$("btnNext").onclick = ()=>{
+  if(curIdx < EXAM_QUESTION_COUNT - 1){
+    curIdx++;
+    renderQuestion();
+  }
+};
+
+$("btnSubmit").onclick = async ()=>{
+  const unanswered = [];
+  for(let i = 0; i < EXAM_QUESTION_COUNT; i++){
+    if(!answers[i]) unanswered.push(i + 1);
+  }
+
+  if(unanswered.length){
+    const ok = confirm(`Bạn còn ${unanswered.length} câu chưa chọn đáp án. Vẫn nộp bài?`);
+    if(!ok) return;
+  }
+
+  await submitExam(false);
+};
+
+$("btnExit").onclick = ()=>{
+  const ok = confirm("Thoát sẽ kết thúc lượt thi hiện tại. Bạn chắc chắn?");
+  if(!ok) return;
+
+  if(timerId){
+    clearInterval(timerId);
+    timerId = null;
+  }
+
+  hide(quizCard);
+  show(modeCard);
+};
+
+$("btnReview").onclick = ()=>{
+  hide(resultCard);
+  show(reviewCard);
+  renderReview();
+};
+
+$("btnBackFromReview").onclick = ()=>{
+  hide(reviewCard);
+  show(resultCard);
+};
+
+$("btnFinish").onclick = ()=>{
+  hide(resultCard);
+  show(modeCard);
+};
+
+$("btnAdminLogin").onclick = async ()=>{
+  const pass = $("adminPass").value;
+
+  if(pass !== ADMIN_PASSWORD){
+    $("adminStatus").className = "status bad small";
+    $("adminStatus").textContent = "Sai mật khẩu.";
+    hide(adminRightCol);
+    hide(adminPanel);
+    return;
+  }
+
+  $("adminStatus").className = "status ok small";
+  $("adminStatus").textContent = "Đăng nhập thành công.";
+  show(adminRightCol);
+  show(adminPanel);
+
+  $("btnRefreshResults").disabled = false;
+  $("btnExportCSV").disabled = false;
+
+  await refreshResults();
+};
+
+$("btnRefreshResults").onclick = refreshResults;
+
+$("btnExportCSV").onclick = ()=>{
+  const rows = window.__ADMIN_ROWS__ || [];
+  exportCSV(rows);
+};
+
+$("btnClearLocal").onclick = ()=>{
+  const ok = confirm("Xóa toàn bộ dữ liệu kết quả cục bộ trên thiết bị này?");
+  if(!ok) return;
+
+  localStorage.removeItem(localKey());
+  $("adminStatus").className = "status ok small";
+  $("adminStatus").textContent = "Đã xóa dữ liệu cục bộ.";
+  $("resultsWrap").innerHTML = "<div class='muted'>Chưa có dữ liệu.</div>";
+};
+
+const __adminPassEl = $("adminPass");
+if(__adminPassEl){
+  __adminPassEl.addEventListener("keydown", (e)=>{
+    if(e.key === "Enter"){
+      e.preventDefault();
+      $("btnAdminLogin").click();
+    }
+  });
+}
+
+resetAdminUI();
+loadQuestions();
+</script>
+</body>
+</html>
